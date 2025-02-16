@@ -255,6 +255,8 @@ class Application(LineTerminal, ArgParseMixin):
     def HandlePretty(self, args):
         self.PrintHeadline()
 
+        library = "notwork"
+
         if args.Files is not None:
             for file in args.Files:
                 if not file.exists():
@@ -262,7 +264,7 @@ class Application(LineTerminal, ArgParseMixin):
                     continue
 
                 self.WriteNormal(f"Parsing file '{file!s}'")
-                document = self.addFile(file, "pretty")
+                document = self.addFile(file, library)
                 self.WriteInfo(
                     dedent(
                         """\
@@ -281,7 +283,7 @@ class Application(LineTerminal, ArgParseMixin):
 
             for file in d.glob("**/*.vhd*"):
                 self.WriteNormal(f"Parsing file '{file!s}'")
-                document = self.addFile(file, "pretty")
+                document = self.addFile(file, library)
                 self.WriteInfo(
                     dedent(
                         """\
@@ -315,6 +317,7 @@ class Application(LineTerminal, ArgParseMixin):
 
         buffer = []
         buffer.append("Design:")
+        
         for line in PP.formatDesign(self._design, 1):
             buffer.append(line)
 
