@@ -30,6 +30,8 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+import code
+
 from typing import List, Generator, Type
 
 from pyTooling.Decorators import export
@@ -216,22 +218,30 @@ def GetArrayConstraintsFromSubtypeIndication(
     subtypeIndication: Iir,
 ) -> List:
     constraints = []
-    for constraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
-        constraintKind = GetIirKindOfNode(constraint)
-        if constraintKind == nodes.Iir_Kind.Range_Expression:
-            constraints.append(RangeExpression.parse(constraint))
-        elif constraintKind in (
-            nodes.Iir_Kind.Simple_Name,
-            nodes.Iir_Kind.Parenthesis_Name,
-            nodes.Iir_Kind.Selected_Name,
-            nodes.Iir_Kind.Attribute_Name,
-        ):
-            constraints.append(GetName(constraint))
-        else:
-            position = Position.parse(constraint)
-            raise DOMException(
-                f"Unknown constraint kind '{constraintKind.name}' for constraint '{constraint}' in subtype indication '{subtypeIndication}' at {position}."
-            )
+
+    subtypeKind = GetIirKindOfNode(subtypeIndication)
+
+    if subtypeKind == nodes.Iir_Kind.Record_Subtype_Definition:
+        # Constraints get thrown away anyway?
+        # code.interact(local=dict(globals(), **locals()))
+        return constraints
+    else:
+        for constraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
+            constraintKind = GetIirKindOfNode(constraint)
+            if constraintKind == nodes.Iir_Kind.Range_Expression:
+                constraints.append(RangeExpression.parse(constraint))
+            elif constraintKind in (
+                nodes.Iir_Kind.Simple_Name,
+                nodes.Iir_Kind.Parenthesis_Name,
+                nodes.Iir_Kind.Selected_Name,
+                nodes.Iir_Kind.Attribute_Name,
+            ):
+                constraints.append(GetName(constraint))
+            else:
+                position = Position.parse(constraint)
+                raise DOMException(
+                    f"Unknown constraint kind '{constraintKind.name}' for constraint '{constraint}' in subtype indication '{subtypeIndication}' at {position}."
+                )
 
     return constraints
 
@@ -314,6 +324,8 @@ def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: s
     elif kind == nodes.Iir_Kind.Subtype_Definition:
         return GetScalarConstrainedSubtypeFromNode(subtypeIndicationNode)
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
+        return GetCompositeConstrainedSubtypeFromNode(subtypeIndicationNode)
+    elif kind == nodes.Iir_Kind.Record_Subtype_Definition:
         return GetCompositeConstrainedSubtypeFromNode(subtypeIndicationNode)
     else:
         raise DOMException(f"Unknown kind '{kind.name}' for an subtype indication in a {entity} of `{name}`.")
