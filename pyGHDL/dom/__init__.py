@@ -40,6 +40,10 @@ from pyGHDL.libghdl import files_map, name_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 
+import code
+import sys
+from loguru import logger
+logger.add(sys.stderr, backtrace=True, diagnose=True)
 
 @export
 class Position:
@@ -92,6 +96,17 @@ class DOMMixin:
 
     def __init__(self, node: Iir):
         self._iirNode = node
+
+    def __getattr__(self, name):
+        try:
+            if name == "Identifier":
+                return self.Name
+
+                raise ValueError(f"Caught bad attribute access: {name}")
+        except ValueError as e:
+            logger.exception("Bad attribute access")
+            exit()
+
 
     @property
     def Position(self) -> Position:
