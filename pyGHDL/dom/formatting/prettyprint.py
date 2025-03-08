@@ -65,7 +65,7 @@ from pyGHDL.dom.DesignUnit import (
     UseClause,
     PackageInstantiation,
 )
-from pyGHDL.dom.Symbol import SimpleSubtypeSymbol, ConstrainedArraySubtypeSymbol
+from pyGHDL.dom.Symbol import SimpleSubtypeSymbol, ConstrainedArraySubtypeSymbol, ConstrainedRecordSubtypeSymbol
 from pyGHDL.dom.Type import (
     IntegerType,
     Subtype,
@@ -449,12 +449,21 @@ class PrettyPrint:
             return f"{subtypeIndication.Name.Identifier}"
         elif isinstance(subtypeIndication, ConstrainedArraySubtypeSymbol):
             constraints = []
-            # FIXME: disabled due to problems with symbols
-            # for constraint in subtypeIndication.Constraints:
-            #     constraints.append(str(constraint))
+
+            for constraint in subtypeIndication.Constraints:
+                constraints.append(str(constraint))
+
+            return f"{subtypeIndication.Name.Identifier}({', '.join(constraints)})"
+        elif isinstance(subtypeIndication, ConstrainedRecordSubtypeSymbol):
+            constraints = []
+            # Constraints: Dict[RecordElementSymbol, Any]
+
+            for element, constraint  in subtypeIndication.Constraints.items():
+                constraints.append(str(constraint))
 
             return f"{subtypeIndication.Name.Identifier}({', '.join(constraints)})"
         else:
+            
             raise PrettyPrintException(
                 f"Unhandled subtype kind '{subtypeIndication.__class__.__name__}' for {entity} '{name}'."
             )
